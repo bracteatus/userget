@@ -1,9 +1,10 @@
-obj-m += getuser.o
+obj-m += src/userget.o
 
 .PHONEY: all clean
 
 all:
-	make -C /lib/modules/`uname -r`/build M=${PWD} modules
+	@mkdir -p build/
+	make -f /lib/modules/`uname -r`/build/Makefile M=${PWD} modules
 
 clean:
-	echo "not done"
+	make -f /lib/modules/`uname -r`/build/Makefile M=${PWD} clean
