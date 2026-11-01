@@ -1,16 +1,11 @@
-.module-common.o
-..module-common.o.cmd
-modules.order
-.modules.order.cmd
-Module.symvers
-.Module.symvers.cmd
-
-src/userget.ko
-src/.userget.ko.cmd
-src/userget.mod
-src/userget.mod.c
-src/.userget.mod.cmd
-src/userget.mod.o
-src/.userget.mod.o.cmd
-src/userget.o
-src/.userget.o.cmd
+# kernel products
+*.o
+*.o.cmd
+*.order
+*.order.cmd
+*Module.symvers
+*.symvers.cmd
+*ko
+*mod
+*mod.c
+*.cmd

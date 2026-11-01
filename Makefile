@@ -1,4 +1,4 @@
-obj-m += src/userget.o
+obj-m += src/userget.o src/usercount.o
 
 .PHONEY: all clean
 
