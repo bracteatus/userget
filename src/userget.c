@@ -31,7 +31,7 @@ static int __init userget_init(void) {
     if (bytes_read == -EAGAIN) { msleep(100); continue; }
     if (bytes_read == -EWOULDBLOCK) { msleep(100); continue; }
     if (bytes_read <= 0) { msleep(100); continue; } 
-    if (bytes_read >= 0) {
+    if (bytes_read > 0) {
       printk(KERN_INFO "Sound caught\n");
     }
   }
