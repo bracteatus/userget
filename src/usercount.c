@@ -1,49 +1,57 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/kobject.h>
+#include <linux/string.h>
+#include <linux/sysfs.h>
+#include <linux/device.h>
 
-#include <linux/fs.h>
-#include <linux/file.h>
-#include <linux/err.h>
-#include <linux/delay.h>
-
-MODULE_LICENSE("Unlicense");
+MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Jaime");
-MODULE_DESCRIPTION("User can press a button to respond in kernel");
-MODULE_VERSION("0.9");
+MODULE_DESCRIPTION("Count button presses from user into kernel.");
+MODULE_VERSION("1.0");
 
-static int __init userget_init(void) {
-  struct file * filp = NULL;
-  char buff[2];
-  loff_t pos = 0;
-  ssize_t bytes_read = 0;
+static char usercount_buffer[32] = "Hello from sysfs!\n";
 
-  buff[0] = 0;
-  buff[1] = 0;
+static ssize_t usercount_show(struct kobject * kobj, struct kobj_attribute * attr, char * buf) {
+  return sprintf(buf, "%s", usercount_buffer);
+}
 
-  filp = filp_open("/tmp/listener", O_RDWR | O_NONBLOCK, 0);
-  if (IS_ERR(filp)) return 1;
+static ssize_t usercount_store(struct kobject * kobj, struct kobj_attribute * attr, const char * buf, size_t count) {
+  if (count > sizeof(usercount_buffer) - 1)
+    return -EINVAL;
 
-  printk(KERN_INFO "Listening\n");
+  memset(usercount_buffer, 0, sizeof(usercount_buffer));
+  memcpy(usercount_buffer, buf, count);
+  usercount_buffer[count] = '\0';
 
-  for (;bytes_read <= 0;) {
-    bytes_read = kernel_read(filp, buff, 1, &pos);
-    if (bytes_read == -EAGAIN) { msleep(100); continue; }
-    if (bytes_read == -EWOULDBLOCK) { msleep(100); continue; }
-    if (bytes_read <= 0) { msleep(100); continue; } 
-    if (bytes_read > 0) {
-      printk(KERN_INFO "Sound caught\n");
-    }
+  return count;
+}
+
+static struct kobj_attribute my_file_attribute = __ATTR(usercount, 0660, usercount_show, usercount_store);
+static struct kobject * my_kobj = NULL;
+
+static int __init usercount_init(void) {
+  int error = 0;
+
+  my_kobj = kobject_create_and_add("usercount", kernel_kobj);
+
+  if (!my_kobj)
+    return -ENOMEM;
+
+  error = sysfs_create_file(my_kobj, &my_file_attribute.attr);
+  if (error) {
+    kobject_put(my_kobj);
+    return error;
   }
-  printk(KERN_INFO "Being done\n");
 
-  filp_close(filp, NULL);
   return 0;
 }
 
-static void __exit userget_exit(void) {
-  printk(KERN_INFO "Done Listening\n");
+static void __exit usercount_exit(void) {
+  sysfs_remove_file(my_kobj, &my_file_attribute.attr);
+  kobject_put(my_kobj);
 }
 
-module_init(userget_init);
-module_exit(userget_exit);
+module_init(usercount_init);
+module_exit(usercount_exit);
